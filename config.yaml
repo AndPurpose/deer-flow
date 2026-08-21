@@ -74,7 +74,10 @@ token_usage:
 # is forced to produce a final answer immediately.
 token_budget:
   enabled: true                 # Shadowchat: budget ON (PAYG has no 429 brake)
-  max_tokens: 200000            # Total token limit (input + output) per run
+  max_tokens: 450000            # Raised from 200k. A K2.5 lead + inherited subagents on a
+                                # broad deep-research run reached ~203k right at synthesis
+                                # and got cut off before writing the report. 450k leaves
+                                # headroom to finish. PAYG cost knob — tune as needed.
   max_input_tokens: null        # Optional separate input-only limit
   max_output_tokens: null       # Optional separate output-only limit
   warn_threshold: 0.8           # Warn at 80% of the budget
@@ -120,19 +123,24 @@ max_recursion_limit: 200
 models:
   # ===== Shadowchat roster — all via the LiteLLM router. FIRST entry = default,
   # so a reliable Featherless tool-caller (Qwen3/Kimi) must lead the harness loop. =====
-  - name: fast
-    display_name: Qwen3-30B-A3B (fast · default)
+  # Deep-research lead = Kimi-K2.5 (agent-longctx). `fast` (Qwen3-30B-A3B) punts with
+  # clarifying questions and lacks the agentic robustness to drive the plan→search→
+  # report loop (verified: it stopped without a single tool call, plus Featherless 500s).
+  # K2.5 decomposes, runs the searches, and synthesizes. `fast` stays in the roster,
+  # one click away for quick chats. Subagents inherit this lead model (see token_budget).
+  - name: agent-longctx
+    display_name: Kimi-K2.5 (long-context lead · default)
     use: langchain_openai:ChatOpenAI
-    model: fast
+    model: agent-longctx
     api_key: $LITELLM_API_KEY
     base_url: http://litellm:4000/v1
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
-  - name: agent-longctx
-    display_name: Kimi-K2.5 (long-context, tool-calling)
+  - name: fast
+    display_name: Qwen3-30B-A3B (fast · quick chat)
     use: langchain_openai:ChatOpenAI
-    model: agent-longctx
+    model: fast
     api_key: $LITELLM_API_KEY
     base_url: http://litellm:4000/v1
     request_timeout: 600.0
