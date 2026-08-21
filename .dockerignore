@@ -84,3 +84,7 @@ backend/sandbox/
 !backend/extensions/
 !backend/extensions/sources/
 !backend/extensions/sources/**
+
+# Shadowchat: bake public skills into the gateway image (override skills/ + *.md excludes)
+!skills
+!skills/**
