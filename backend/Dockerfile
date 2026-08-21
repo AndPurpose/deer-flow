@@ -120,6 +120,13 @@ WORKDIR /app
 # Copy backend with pre-built virtualenv from builder
 COPY --from=builder /app/backend ./backend
 
+# Shadowchat: bake config, extensions, and public skills into the image so the deploy
+# doesn't rely on single-file/dir bind mounts — Coolify turns those into empty
+# directories. Config changes take effect on rebuild (Coolify redeploy).
+COPY config.yaml ./backend/config.yaml
+COPY extensions_config.json ./backend/extensions_config.json
+COPY skills ./skills
+
 # Expose Gateway API port.
 EXPOSE 8001
 

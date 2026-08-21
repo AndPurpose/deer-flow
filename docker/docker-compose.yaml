@@ -106,9 +106,9 @@ services:
     # Redis stream bridge is enabled and those limitations are acceptable.
     command: sh -c "cd backend && PYTHONPATH=. uv run --no-sync uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001 --workers ${GATEWAY_WORKERS:-1}"
     volumes:
-      - ${DEER_FLOW_CONFIG_PATH}:/app/backend/config.yaml:ro
-      - ${DEER_FLOW_EXTENSIONS_CONFIG_PATH}:/app/backend/extensions_config.json:ro
-      - ../skills:/app/skills:ro
+      # config.yaml, extensions_config.json, and skills/ are BAKED into the image
+      # (see backend/Dockerfile) to avoid Coolify's single-file-bind-mount-becomes-a-
+      # directory bug. Only the writable data dir stays a mount.
       - ${DEER_FLOW_HOME}:/app/backend/.deer-flow
       # DooD: the host Docker socket is NOT mounted by default. It is added only
       # for aio (pure-DooD) sandbox mode via the opt-in docker-compose.dood.yaml
