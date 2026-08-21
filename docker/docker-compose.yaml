@@ -108,8 +108,8 @@ services:
     volumes:
       # config.yaml, extensions_config.json, and skills/ are BAKED into the image
       # (see backend/Dockerfile) to avoid Coolify's single-file-bind-mount-becomes-a-
-      # directory bug. Only the writable data dir stays a mount.
-      - ${DEER_FLOW_HOME}:/app/backend/.deer-flow
+      # directory bug. Only the writable data dir stays a mount (named volume).
+      - deerflow-data:/app/backend/.deer-flow
       # DooD: the host Docker socket is NOT mounted by default. It is added only
       # for aio (pure-DooD) sandbox mode via the opt-in docker-compose.dood.yaml
       # overlay (appended by scripts/deploy.sh). See backend/docs/CONFIGURATION.md
@@ -159,6 +159,7 @@ services:
 
   # ── Sandbox Provisioner (optional, Kubernetes mode) ────────────────────────
   provisioner:
+    profiles: ["k8s-sandbox"]   # k8s-mode sandbox only; not started by default
     build:
       context: ./provisioner
       dockerfile: Dockerfile
@@ -199,6 +200,7 @@ services:
       retries: 6
 volumes:
   redis-data:
+  deerflow-data:
 
 networks:
   deer-flow:
