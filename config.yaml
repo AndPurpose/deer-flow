@@ -137,11 +137,16 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
-    # Per-call OUTPUT cap. Without it, the provider default (4096) truncated the
-    # final report-writing turn: completion_tokens hit exactly 4096 with a cut
-    # finish_reason, so only a "let me compile the findings" stub survived. A raised
-    # cap lets the synthesis complete (verified: fast produced 5914 tok, stop).
+    # Per-call OUTPUT cap. THE SUBTLE BUG: langchain-openai serializes max_tokens as
+    # `max_completion_tokens`, which Featherless IGNORES (it honors only the raw
+    # `max_tokens` key) -> every long turn silently truncated at the 4096 default,
+    # killing report synthesis (stub "let me compile the findings"). Set BOTH:
+    # max_tokens for DeerFlow's own accounting AND extra_body.max_tokens so the raw
+    # key reaches Featherless. Verified through LiteLLM: with both keys present the
+    # raw max_tokens wins -> 5500 completion tokens, finish_reason=stop.
     max_tokens: 16000
+    extra_body:
+      max_tokens: 16000
   - name: fast
     display_name: Qwen3-30B-A3B (fast · quick chat)
     use: langchain_openai:ChatOpenAI
@@ -151,7 +156,9 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
-    max_tokens: 16000   # raise output cap above the 4096 default (see agent-longctx)
+    max_tokens: 16000
+    extra_body:
+      max_tokens: 16000   # force raw max_tokens; Featherless ignores max_completion_tokens (see agent-longctx)
   - name: lead-uncensored
     display_name: Gemma-4-26B-A4B (uncensored)
     use: langchain_openai:ChatOpenAI
@@ -161,6 +168,9 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    max_tokens: 16000
+    extra_body:
+      max_tokens: 16000   # raw key; Featherless ignores max_completion_tokens
   - name: fast-reasoning
     display_name: DeepSeek-V4-Flash (reasoning)
     use: langchain_openai:ChatOpenAI
@@ -170,6 +180,9 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    max_tokens: 16000
+    extra_body:
+      max_tokens: 16000   # raw key; Featherless ignores max_completion_tokens
   - name: frontier
     display_name: GLM-5.2 (synthesis)
     use: langchain_openai:ChatOpenAI
@@ -179,6 +192,9 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    max_tokens: 16000
+    extra_body:
+      max_tokens: 16000   # raw key; Featherless ignores max_completion_tokens
   - name: coder
     display_name: Qwen3-Coder-30B-A3B
     use: langchain_openai:ChatOpenAI
@@ -188,6 +204,9 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    max_tokens: 16000
+    extra_body:
+      max_tokens: 16000   # raw key; Featherless ignores max_completion_tokens
 
   # Example: Volcengine (Doubao) model
   # - name: doubao-seed-1.8
