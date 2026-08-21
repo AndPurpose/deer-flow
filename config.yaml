@@ -137,6 +137,11 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    # Per-call OUTPUT cap. Without it, the provider default (4096) truncated the
+    # final report-writing turn: completion_tokens hit exactly 4096 with a cut
+    # finish_reason, so only a "let me compile the findings" stub survived. A raised
+    # cap lets the synthesis complete (verified: fast produced 5914 tok, stop).
+    max_tokens: 16000
   - name: fast
     display_name: Qwen3-30B-A3B (fast · quick chat)
     use: langchain_openai:ChatOpenAI
@@ -146,6 +151,7 @@ models:
     request_timeout: 600.0
     max_retries: 2
     supports_thinking: false
+    max_tokens: 16000   # raise output cap above the 4096 default (see agent-longctx)
   - name: lead-uncensored
     display_name: Gemma-4-26B-A4B (uncensored)
     use: langchain_openai:ChatOpenAI
