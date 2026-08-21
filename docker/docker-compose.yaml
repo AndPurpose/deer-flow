@@ -69,7 +69,7 @@ services:
   # ── Frontend: Next.js Production ───────────────────────────────────────────
   frontend:
     build:
-      context: ../
+      context: .          # repo root — Coolify runs with --project-directory=<repo>, so `..` breaks
       dockerfile: frontend/Dockerfile
       target: prod
       args:
@@ -88,7 +88,7 @@ services:
   # ── Gateway API ────────────────────────────────────────────────────────────
   gateway:
     build:
-      context: ../
+      context: .          # repo root — Coolify runs with --project-directory=<repo>, so `..` breaks
       dockerfile: backend/Dockerfile
       args:
         APT_MIRROR: ${APT_MIRROR:-}
