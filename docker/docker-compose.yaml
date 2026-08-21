@@ -62,6 +62,16 @@ services:
         condition: service_started
       gateway:
         condition: service_healthy
+    labels:
+      # nginx sits on TWO docker networks: the Coolify app network
+      # (ngchpejy0jewsmpyvo3y75hp, which coolify-proxy is attached to) and the
+      # compose "deer-flow" network (which the proxy is NOT on). Coolify emitted no
+      # traefik.docker.network label, and Traefik has no global default network, so
+      # it picked nginx's deer-flow IP and every HTTPS request hung (TLS handshake
+      # OK, backend unreachable -> curl 000). Pin Traefik to the app network the
+      # proxy shares with us so it routes to a reachable nginx IP. The app-network
+      # name equals the Coolify application UUID and is stable across redeploys.
+      - "traefik.docker.network=ngchpejy0jewsmpyvo3y75hp"
     networks:
       - deer-flow
     restart: unless-stopped
