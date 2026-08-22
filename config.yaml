@@ -985,14 +985,17 @@ tools:
   #   # api_key: $EXA_API_KEY
 
   # Web fetch tool (uses Jina AI reader)
+  # web_fetch via self-hosted Crawl4AI (headless Chrome; the `crawl4ai` compose service).
+  # Replaces the anonymous Jina reader, which 403'd on abuse-blocked domains (huggingface.co).
   - name: web_fetch
     group: web
-    use: deerflow.community.jina_ai.tools:web_fetch_tool
-    timeout: 10
-    # Optional proxy for restricted networks / Docker / WSL.
-    # Use host.docker.internal instead of 127.0.0.1 when the proxy runs on the host.
-    # proxy: $HTTPS_PROXY
-    # trust_env: true
+    use: deerflow.community.crawl4ai.tools:web_fetch_tool
+    base_url: http://crawl4ai:11235
+    token: $CRAWL4AI_TOKEN   # Bearer token; must equal crawl4ai's CRAWL4AI_API_TOKEN
+    timeout: 30
+    # Jina fallback — to revert, comment the crawl4ai block above and uncomment:
+    # use: deerflow.community.jina_ai.tools:web_fetch_tool
+    # timeout: 10
 
   # Web fetch tool (uses InfoQuest)
   # - name: web_fetch

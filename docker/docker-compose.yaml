@@ -145,6 +145,8 @@ services:
       - DEER_FLOW_CHANNELS_LANGGRAPH_URL=${DEER_FLOW_CHANNELS_LANGGRAPH_URL:-http://gateway:8001/api}
       - DEER_FLOW_CHANNELS_GATEWAY_URL=${DEER_FLOW_CHANNELS_GATEWAY_URL:-http://gateway:8001}
       - DEER_FLOW_INTERNAL_AUTH_TOKEN=${DEER_FLOW_INTERNAL_AUTH_TOKEN}
+      # Self-hosted Crawl4AI web_fetch — Bearer token (must equal crawl4ai's CRAWL4AI_API_TOKEN)
+      - CRAWL4AI_TOKEN=${SERVICE_PASSWORD_CRAWL4AI}
       # DooD path/network translation
       - DEER_FLOW_HOST_BASE_DIR=${DEER_FLOW_HOME}
       - DEER_FLOW_SANDBOX_HOST=host.docker.internal
@@ -169,6 +171,29 @@ services:
       - deer-flow
       - shadowchat        # join shadowchat's network to reach litellm:4000 / searxng:8080
     restart: unless-stopped
+
+  # ── Web content extraction: self-hosted Crawl4AI (headless Chrome) ──────────
+  # Replaces the anonymous Jina reader (which 403'd on abuse-blocked domains like
+  # huggingface.co). Fully self-hosted, no external API. The token is REQUIRED —
+  # without CRAWL4AI_API_TOKEN the server binds 127.0.0.1 only and the gateway
+  # cannot reach it. Coolify auto-generates SERVICE_PASSWORD_CRAWL4AI.
+  crawl4ai:
+    image: unclecode/crawl4ai:0.9.2   # pinned >=0.8.7 (earlier tags carry pre-auth RCEs)
+    container_name: deer-flow-crawl4ai
+    environment:
+      - CRAWL4AI_API_TOKEN=${SERVICE_PASSWORD_CRAWL4AI}
+    shm_size: 1gb
+    expose:
+      - "11235"
+    networks:
+      - deer-flow
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:11235/health', timeout=3)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   # ── Sandbox Provisioner (optional, Kubernetes mode) ────────────────────────
   provisioner:
